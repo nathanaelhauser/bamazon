@@ -143,4 +143,39 @@ const addInventory = _ => {
     .catch(e => console.log(e))
 }
 
+const addProduct = _ => {
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Enter product name:'
+    }, {
+      type: 'input',
+      name: 'department',
+      message: 'Enter product department:'
+    }, {
+      type: 'number',
+      name: 'price',
+      message: 'Enter product price:'
+    }, {
+      type: 'number',
+      name: 'stock',
+      message: 'Enter initial inventory:'
+    }
+  ])
+    .then(({ name, department, price, stock }) => {
+      const fixedPrice = Math.round(price*100) / 100.0
+      const fixedStock = Math.trunc(stock)
+      db.query('INSERT INTO products(product_name, department_name, price, stock_quantity) VALUES (?,?,?,?)',
+        [name, department, fixedPrice, fixedStock],
+        (e, data) => {
+          if (e) {
+            console.log(e)
+          }
+          console.log(`${name} is now in stock!`)
+          db.end()
+        })
+    })
+}
+
 start()
