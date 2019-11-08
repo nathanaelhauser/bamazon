@@ -14,7 +14,7 @@ const start = _ => {
   inquirer.prompt({
     type: 'list',
     name: 'action',
-    message: 'Choose an option:',
+    message: 'What do you want to do?',
     choices: ['View Products for Sale', 'View Low Inventory', 'Add to Inventory', 'Add New Product']
   })
     .then(({ action }) => {
@@ -35,6 +35,7 @@ const start = _ => {
           break
         default:
           console.log('You do not have permission to be here!')
+          db.end()
           break
       }
     })

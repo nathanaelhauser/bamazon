@@ -72,7 +72,7 @@ const order = ({ stock_quantity: stock, item_id: id, price, product_sales: sales
         const totalPrice = chalk.red(`$${(price * amount).toFixed(2)}`)
         console.log(`You will be charged ${totalPrice}`)
         db.query('UPDATE products SET product_sales = ? WHERE item_id = ?',
-            [price * amount],
+            [price * amount, id],
             (e, data) => {
               if (e) {
                 console.log(e)
