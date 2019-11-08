@@ -85,8 +85,9 @@ const viewAll = _ => {
 
 const viewLow = _ => {
   db.query('SELECT * FROM products WHERE stock_quantity < 5', (e, data) => {
+    console.log(data)
     displayTable(data)
-      ,then(output => {
+      .then(output => {
         console.log(output)
         db.end()
       })
