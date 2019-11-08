@@ -9,7 +9,9 @@ INSERT INTO products(product_name, department_name, price, stock_quantity)
          ('Fusion Nuclear Bomb', 'Cleaning Supplies', 100.00, 50),
          ('Hadrion Collider', 'Industrial', 3.50, 42),
          ('Greenland', 'Land', 1099.99, 2),
-         ('Lightning in a Bottle', 'Novelty Gifts', 199.99, 238);
+         ('Lightning in a Bottle', 'Novelty Gifts', 199.99, 238),
+         ('Goodyear Blimp', 'Aircraft', 1.99, 10),
+         ('SammyBoy TV', 'Electronics', 42000, 24);
 
 USE bamazon;
 INSERT INTO departments(department_name, over_head_costs)
