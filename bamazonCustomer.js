@@ -54,7 +54,7 @@ async function displayData(data) {
   return response
 }
 
-const order = ({ stock_quantity: stock, item_id: id, price }, amount) => {
+const order = ({ stock_quantity: stock, item_id: id, price, product_sales: sales }, amount) => {
   if (stock < amount) {
     console.log('Insufficient quantity!')
     db.end()
@@ -63,15 +63,22 @@ const order = ({ stock_quantity: stock, item_id: id, price }, amount) => {
   console.log('Ordering...')
 
   db.query('UPDATE products SET stock_quantity = ? WHERE item_id = ?', 
-    [stock - amount, id], 
-    (e, data) => {
-      if (e) {
-        console.log(e)
-      }
-      console.log('Successfully Ordered!')
-      const totalPrice = chalk.red(`$${(price*amount).toFixed(2)}`)
-      console.log(`You will be charged ${totalPrice}`)
-      db.end()
+      [stock - amount, id], 
+      (e, data) => {
+        if (e) {
+          console.log(e)
+        }
+        console.log('Successfully Ordered!')
+        const totalPrice = chalk.red(`$${(price * amount).toFixed(2)}`)
+        console.log(`You will be charged ${totalPrice}`)
+        db.query('UPDATE products SET product_sales = ? WHERE item_id = ?',
+            [price * amount],
+            (e, data) => {
+              if (e) {
+                console.log(e)
+              }
+              db.end()
+            })
     })
 }
 
@@ -95,7 +102,7 @@ start()
         ])
           .then(({ id, amount }) => {
             const [product] = products.filter(prod => prod.item_id === id)
-            order(product, amount)
+            order(product, Math.floor(amount))
           })
           .catch(e => console.log(e))
       })
