@@ -23,38 +23,82 @@ async function start() {
   return response
 }
 
-// const start = _ => {
-//   db.query('SELECT * FROM products', (e, data) => {
-//     if (e) {
-//       console.log(e)
-//     }
-//     // console.log(data)
-//     displayData(data)
-//     db.end()
-//   })
-
-// }
-
-const displayData = data => {
-  const products = data.reduce(
-    (displayTable, { item_id, product_name, department_name, price, stock_quantity }) => {
-      displayTable.push([item_id, product_name, department_name, price, stock_quantity])
-      return displayTable
+async function displayData(data) {
+  let response = await new Promise((resolve, reject) => {
+    const display = data.reduce((productsArr, product) => {
+      productsArr.push([product.item_id, product.product_name,
+      product.department_name, product.price.toFixed(2), product.stock_quantity])
+      return productsArr
     }, [[
-      chalk.red('ID'),
-      chalk.red('NAME'),
-      chalk.red('DEPARTMENT'),
-      chalk.red('PRICE'),
-      chalk.red('STOCK')
-    ]]
-  )
+      chalk.green('ID'),
+      chalk.green('NAME'),
+      chalk.green('DEPARTMENT'),
+      chalk.green('PRICE'),
+      chalk.green('STOCK')
+    ]])
 
-  console.log(table(products))
+    const config = {
+      columns: {
+        3: {
+          alignment: 'right'
+        },
+        4: {
+          alignment: 'right'
+        }
+      }
+    }
+
+    resolve(table(display, config))
+  })
+
+  return response
 }
 
+const order = ({ stock_quantity: stock, item_id: id, price }, amount) => {
+  if (stock < amount) {
+    console.log('Insufficient quantity!')
+    db.end()
+    return
+  }
+  console.log('Ordering...')
+
+  db.query('UPDATE products SET stock_quantity = ? WHERE item_id = ?', 
+    [stock - amount, id], 
+    (e, data) => {
+      if (e) {
+        console.log(e)
+      }
+      console.log('Successfully Ordered!')
+      const totalPrice = chalk.red(`$${(price*amount).toFixed(2)}`)
+      console.log(`You will be charged ${totalPrice}`)
+      db.end()
+    })
+}
 
 start()
   .then(data => {
-    displayData(data)
+    const products = data
+    displayData(products)
+      .then(display => {
+        console.log(display)
+        inquirer.prompt([
+          {
+            type: 'list',
+            name: 'id',
+            message: 'Choose the ID of the item you want',
+            choices: products.map(product => product.item_id)
+          }, {
+            type: 'number',
+            name: 'amount',
+            message: 'Enter the amount you want:'
+          }
+        ])
+          .then(({ id, amount }) => {
+            const [product] = products.filter(prod => prod.item_id === id)
+            order(product, amount)
+          })
+          .catch(e => console.log(e))
+      })
+      .catch(e => console.log(e))
   })
   .catch(e => console.log(e))
