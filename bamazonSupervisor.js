@@ -37,12 +37,14 @@ const start = _ => {
 async function displayData(data) {
   let response = await new Promise((resolve, reject) => {
     const display = data.reduce((departmentArr, department) => {
+      const sales = department.product_sales ? department.product_sales : 0
+      const net = sales - department.over_head_costs
       departmentArr.push([
           department.department_id, 
           department.department_name,
           department.over_head_costs.toFixed(2),
-          department.product_sales.toFixed(2),
-          (department.product_sales - department.over_head_costs).toFixed(2)
+          sales.toFixed(2),
+          net.toFixed(2)
         ])
       return departmentArr
     }, [[
@@ -75,11 +77,11 @@ async function displayData(data) {
 
 const viewSales = _ => {
 
-  db.query(`SELECT departments.department_id, departments.department_name, 
-                   departments.over_head_costs, SUM(products.product_sales) AS product_sales
-            FROM departments
-            LEFT JOIN products ON departments.department_name = products.department_name
-            GROUP BY products.department_name`,
+  db.query(`SELECT d.department_id, d.department_name, 
+                   d.over_head_costs, SUM(p.product_sales) AS product_sales
+            FROM departments AS d
+            LEFT JOIN products AS p ON d.department_name = p.department_name
+            GROUP BY p.department_name`,
     (e, data) => {
       if (e) {
         console.log(e)
@@ -89,6 +91,33 @@ const viewSales = _ => {
         .catch(e => console.log(e))
       db.end()
     })
+}
+
+const createDepartment = _ => {
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'What do you want to name the new department?'
+    }, {
+      type: 'number',
+      name: 'costs',
+      message: 'What is the overhead costs of this department?'
+    }
+  ])
+    .then(({ name, costs }) => {
+      console.log(`Hiring contractor to build department ${name}...`)
+      db.query('INSERT INTO departments(department_name, over_head_costs) VALUES (?, ?)',
+        [name, costs],
+        (e, data) => {
+          if (e) {
+            console.log(e)
+          }
+          console.log(`Department ${name} successfully built!`)
+          db.end()
+        })
+    })
+    .catch(e => console.log(e))
 }
 
 start()
