@@ -34,6 +34,45 @@ const start = _ => {
     .catch(e => console.log(e))
 }
 
+async function displayData(data) {
+  let response = await new Promise((resolve, reject) => {
+    const display = data.reduce((departmentArr, department) => {
+      departmentArr.push([
+          department.department_id, 
+          department.department_name,
+          department.over_head_costs.toFixed(2),
+          department.product_sales.toFixed(2),
+          (department.product_sales - department.over_head_costs).toFixed(2)
+        ])
+      return departmentArr
+    }, [[
+      chalk.green('ID'),
+      chalk.green('NAME'),
+      chalk.green('OVERHEAD COST'),
+      chalk.green('PRODUCT SALES'),
+      chalk.green('NET PROFITS')
+    ]])
+
+    const config = {
+      columns: {
+        2: {
+          alignment: 'right'
+        },
+        3: {
+          alignment: 'right'
+        },
+        4: {
+          alignment: 'right'
+        }
+      }
+    }
+
+    resolve(table(display, config))
+  })
+
+  return response
+}
+
 const viewSales = _ => {
 
   db.query(`SELECT departments.department_id, departments.department_name, 
@@ -45,7 +84,9 @@ const viewSales = _ => {
       if (e) {
         console.log(e)
       }
-      console.log(data)
+      displayData(data)
+        .then(output => console.log(output))
+        .catch(e => console.log(e))
       db.end()
     })
 }
