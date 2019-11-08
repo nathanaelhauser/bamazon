@@ -21,9 +21,11 @@ const start = _ => {
       switch (action) {
         case 'View Products for Sale':
           viewAll()
+          db.end()
           break
         case 'View Low Inventory':
           viewLow()
+          db.end()
           break
         case 'Add to Inventory':
           addInventory()
@@ -72,15 +74,27 @@ async function displayTable (data) {
   return response
 }
 
-const viewAll = _ => {
-  db.query('SELECT * FROM products', (e, data) => {
-    displayTable(data)
-      .then(output => {
-        console.log(output)
-        db.end()
-      })
-      .catch(e => console.log(e))
+async function grabAll () {
+  let response = await new Promise((resolve, reject) => {
+    db.query('SELECT * FROM products', (e, data) => {
+      if (e) {
+        reject(e)
+      }
+      resolve(data)
+    })
   })
+
+  return response
+}
+
+const viewAll = _ => {
+  grabAll()
+    .then(data => {
+      displayTable(data)
+        .then(output => console.log(output))
+        .catch(e => console.log(e))
+    })
+    .catch(e => console.log(e))
 }
 
 const viewLow = _ => {
@@ -89,10 +103,31 @@ const viewLow = _ => {
     displayTable(data)
       .then(output => {
         console.log(output)
-        db.end()
       })
       .catch(e => console.log(e))
   })
+}
+
+const addInventory = _ => {
+  grabAll()
+    .then(data => {
+      displayTable(data)
+        .then(output => {
+          console.log(output)
+          inquirer.prompt({
+            type: 'list',
+            name: 'id',
+            message: 'Which item do you want to add inventory to?',
+            choices: data.map(({ item_id }) => item_id)
+          })
+            .then(({ id }) => {
+              console.log(id)
+            })
+            .catch(e => console.log(e))
+        })
+        .catch(e => console.log(e))
+    })
+    .catch(e => console.log(e))
 }
 
 start()
