@@ -114,14 +114,27 @@ const addInventory = _ => {
       displayTable(data)
         .then(output => {
           console.log(output)
-          inquirer.prompt({
-            type: 'list',
-            name: 'id',
-            message: 'Which item do you want to add inventory to?',
-            choices: data.map(({ item_id }) => item_id)
-          })
-            .then(({ id }) => {
-              console.log(id)
+          inquirer.prompt([
+            {
+              type: 'list',
+              name: 'id',
+              message: 'Which item do you want to add inventory to?',
+              choices: data.map(({ item_id }) => item_id)
+            }, {
+              type: 'number',
+              name: 'amount',
+              message: 'How much do you want to order?'
+            }
+          ])
+            .then(({ id, amount }) => {
+              console.log(`Shipping ${amount} of item ${id}...`)
+              const [{ stock_quantity: currentStock }] = data.filter(({ item_id }) => item_id === id)
+              db.query('UPDATE products SET stock_quantity = ? WHERE item_id = ?',
+                [currentStock + amount, id],
+                (e, data) => {
+                  console.log('Product arrived!!')
+                  db.end()
+                })
             })
             .catch(e => console.log(e))
         })
